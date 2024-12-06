@@ -1,13 +1,17 @@
-package primeiro.api.cqrsjava01.models;
+package primeiro.api.cqrsjava01.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
 @Builder
-public class Person {
+@NoArgsConstructor
+@AllArgsConstructor
+public class PersonResponseDTO {
     private String id;
     private String fullName;
     private Date birthDate;
