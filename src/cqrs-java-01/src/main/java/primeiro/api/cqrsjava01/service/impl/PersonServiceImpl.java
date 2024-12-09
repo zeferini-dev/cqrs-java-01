@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 @Service
 public class PersonServiceImpl implements PersonService {
 
-    @Autowired
     private final PersonRepository personRepository;
 
     public PersonServiceImpl(PersonRepository personRepository) {
@@ -31,9 +30,11 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Override
-    public Optional<PersonResponseDTO> findById(String id) {
-        return personRepository.findById(id)
-                .map(this::mapToResponseDTO);
+    public PersonResponseDTO findById(String id) {
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
+
+        return mapToResponseDTO(person);
     }
 
     @Override

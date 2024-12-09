@@ -1,7 +1,5 @@
 server:
   port: 8080
-  servlet:
-    context-path: /v1/api
 
 api:
   version: 1.0.0
@@ -9,25 +7,32 @@ api:
   description: CQRS Java 01
 
 spring:
+  profiles:
+    active: development
+---
+
+spring:
   application:
     name: cqrs-java-01
   datasource:
     url: jdbc:h2:mem:testdb
     username: sa
-    password:
+    password: password
     h2:
       console:
         enabled: true
         path: /h2-console
-    jpa:
-      hibernate:
-        ddl-auto: update
+    hibernate:
+      ddl-auto: create-drop
+      database-platform: org.hibernate.dialect.H2Dialect
       show-sql: true
-
 springdoc:
-  api-docs:
-    enabled: true # Habilita a geração da documentação
-    path: /v1/api-docs # Caminho onde o OpenAPI estará disponível
   swagger-ui:
-    enabled: true # Habilita a interface do Swagger UI
-    path: /swagger-ui.html # Caminho para acessar o Swagger UI
+    path: /swagger-ui.html
+    title: CQRS Java 01
+    version: 1.0.0
+    description: CQRS Java 01
+    license: Apache License Version 2.0
+    licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.html
+    termsOfServiceUrl: http://localhost:8080/v1/api/swagger-ui.html
+

@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface PersonService {
     List<PersonResponseDTO> findAll();
-    Optional<PersonResponseDTO> findById(String id);
+    PersonResponseDTO findById(String id);
     PersonResponseDTO save(PersonRequestDTO personRequestDTO);
     PersonResponseDTO update(String id, PersonRequestDTO personRequestDTO);
     void deleteById(String id);
