@@ -8,31 +8,124 @@ api:
 
 spring:
   profiles:
-    active: development
----
+    active: development # Define o perfil ativo (altere para test, DEV, HOM ou PRO conforme necessário)
 
+---
 spring:
-  application:
-    name: cqrs-java-01
+  config:
+    activate:
+      on-profile: development
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password: password
-    h2:
-      console:
-        enabled: true
-        path: /h2-console
+    url: jdbc:h2:mem:developmentdb
+    driver-class-name: org.h2.Driver
+    username: dev_user
+    password: dev_password
+  jpa:
     hibernate:
-      ddl-auto: create-drop
-      database-platform: org.hibernate.dialect.H2Dialect
-      show-sql: true
+      ddl-auto: update
+  server:
+    port: 8080
+  application:
+    name: MyApp-Development
+    environment: Development
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
-    title: CQRS Java 01
-    version: 1.0.0
-    description: CQRS Java 01
-    license: Apache License Version 2.0
-    licenseUrl: http://www.apache.org/licenses/LICENSE-2.0.html
-    termsOfServiceUrl: http://localhost:8080/v1/api/swagger-ui.html
+    enabled: true
+  api-docs:
+    enabled: true
 
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: test_user
+    password: test_password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  server:
+    port: 8084
+  application:
+    name: MyApp-Test
+    environment: Test
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: DEV
+  datasource:
+    url: jdbc:postgresql://dev-db:5432/devdb
+    driver-class-name: org.postgresql.Driver
+    username: dev_db_user
+    password: dev_db_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  server:
+    port: 8081
+  application:
+    name: MyApp-DEV
+    environment: DEV
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: HOM
+  datasource:
+    url: jdbc:postgresql://hom-db:5432/homdb
+    driver-class-name: org.postgresql.Driver
+    username: hom_db_user
+    password: hom_db_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  server:
+    port: 8082
+  application:
+    name: MyApp-HOM
+    environment: HOM
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: PRO
+  datasource:
+    url: jdbc:postgresql://pro-db:5432/prodb
+    driver-class-name: org.postgresql.Driver
+    username: pro_db_user
+    password: pro_db_password
+  jpa:
+    hibernate:
+      ddl-auto: none
+  server:
+    port: 8083
+  application:
+    name: MyApp-PRO
+    environment: Production
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false

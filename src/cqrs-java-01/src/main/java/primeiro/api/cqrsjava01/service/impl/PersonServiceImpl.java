@@ -1,5 +1,6 @@
 package primeiro.api.cqrsjava01.service.impl;
 
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import primeiro.api.cqrsjava01.domain.Person;
@@ -10,6 +11,7 @@ import primeiro.api.cqrsjava01.service.PersonService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +42,7 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public PersonResponseDTO save(PersonRequestDTO personRequestDTO) {
         Person person = mapToEntity(personRequestDTO);
+        person.setId(UUID.randomUUID().toString());
         Person savedPerson = personRepository.save(person);
         return mapToResponseDTO(savedPerson);
     }

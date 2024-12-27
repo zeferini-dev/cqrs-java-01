@@ -1,0 +1,252 @@
+// Arquivo: docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_crud
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: crud_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local
+
+// Arquivo: pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://www.maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>spring-boot-crud</artifactId>
+    <version>1.0.0</version>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.1.0</version>
+    </parent>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+// Arquivo: application.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crud_db
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+
+// Entidade Principal: EntityA
+// Arquivo: src/main/java/com/example/entity/EntityA.java
+package com.example.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "entity_a")
+public class EntityA {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(name = "related_id")
+    private Long relatedId;
+
+    // Getters and Setters
+}
+
+// Entidade Relacionada: EntityB
+// Arquivo: src/main/java/com/example/entity/EntityB.java
+package com.example.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "entity_b")
+public class EntityB {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String data;
+
+    // Getters and Setters
+}
+
+// DTO para JOIN
+// Arquivo: src/main/java/com/example/dto/CustomJoinResult.java
+package com.example.dto;
+
+public class CustomJoinResult {
+    private Long id;
+    private String name;
+    private String relatedData;
+
+    public CustomJoinResult(Long id, String name, String relatedData) {
+        this.id = id;
+        this.name = name;
+        this.relatedData = relatedData;
+    }
+
+    // Getters and Setters
+}
+
+// Repositório Customizado
+// Arquivo: src/main/java/com/example/repository/CustomRepository.java
+package com.example.repository;
+
+import java.util.List;
+
+public interface CustomRepository {
+    <T> List<T> executeListQuery(String sql, Class<T> type);
+
+    boolean executeUpdateQuery(String sql);
+
+    Integer executeCountQuery(String sql);
+}
+
+// Implementação do Repositório Customizado
+// Arquivo: src/main/java/com/example/repository/CustomRepositoryImpl.java
+package com.example.repository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public class CustomRepositoryImpl implements CustomRepository {
+
+    private final EntityManager entityManager;
+
+    public CustomRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public <T> List<T> executeListQuery(String sql, Class<T> type) {
+        try {
+            Query query = entityManager.createNativeQuery(sql, type);
+            return query.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error executing list query: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public boolean executeUpdateQuery(String sql) {
+        try {
+            Query query = entityManager.createNativeQuery(sql);
+            query.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public Integer executeCountQuery(String sql) {
+        try {
+            Query query = entityManager.createNativeQuery(sql);
+            Object result = query.getSingleResult();
+            return result != null ? Integer.parseInt(result.toString()) : 0;
+        } catch (Exception e) {
+            throw new RuntimeException("Error executing count query: " + e.getMessage(), e);
+        }
+    }
+}
+
+// Repositório
+// Arquivo: src/main/java/com/example/repository/MyEntityRepository.java
+package com.example.repository;
+
+import com.example.entity.EntityA;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MyEntityRepository extends JpaRepository<EntityA, Long>, CustomRepository {
+}
+
+// Controlador REST
+// Arquivo: src/main/java/com/example/controller/MyEntityController.java
+package com.example.controller;
+
+import com.example.dto.CustomJoinResult;
+import com.example.repository.MyEntityRepository;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/entities")
+public class MyEntityController {
+
+    private final MyEntityRepository repository;
+
+    public MyEntityController(MyEntityRepository repository) {
+        this.repository = repository;
+    }
+
+    @GetMapping("/joins")
+    public List<CustomJoinResult> getJoinResults() {
+        String sql = """
+                SELECT e.id AS id, e.name AS name, b.data AS relatedData
+                FROM entity_a e
+                JOIN entity_b b ON e.related_id = b.id
+                """;
+        return repository.executeListQuery(sql, CustomJoinResult.class);
+    }
+
+    @PostMapping("/update")
+    public boolean updateEntity(@RequestParam String sql) {
+        return repository.executeUpdateQuery(sql);
+    }
+
+    @GetMapping("/count")
+    public Integer getCount(@RequestParam String sql) {
+        return repository.executeCountQuery(sql);
+    }
+}
